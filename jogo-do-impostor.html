@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>Jogo do Impostor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#120E24;
+    --bg-deep-2:#1A1333;
+    --bg-panel:#1F1839;
+    --bg-panel-2:#2A2150;
+    --bg-panel-3:#352A66;
+    --accent-gold:#F2C94C;
+    --accent-gold-dim:#c9a53c;
+    --accent-magenta:#FF3D81;
+    --accent-violet:#8C6FFF;
+    --text-primary:#F5F0FF;
+    --text-muted:#A79ACB;
+    --text-faint:#6E6296;
+    --line:rgba(140,111,255,0.18);
+    --radius-lg:28px;
+    --radius-md:18px;
+    --radius-sm:12px;
+    --shadow-deep:0 20px 50px rgba(0,0,0,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 120% 80% at 50% -10%, rgba(140,111,255,0.22), transparent 60%),
+      radial-gradient(ellipse 100% 60% at 80% 110%, rgba(255,61,129,0.10), transparent 60%),
+      var(--bg-deep);
+    color:var(--text-primary);
+    font-family:'Manrope',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:max(20px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+    position:relative;
+  }
+  .display{font-family:'Unbounded',sans-serif;}
+  .mono{font-family:'Space Mono',monospace;}
+
+  /* Top bar */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:18px;
+    min-height:40px;
+  }
+  .backbtn{
+    width:40px;height:40px;border-radius:50%;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    color:var(--text-primary);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:18px;
+    flex-shrink:0;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .backbtn:hover{background:var(--bg-panel-2);}
+  .backbtn:active{transform:scale(0.92);}
+  .topbar-title{
+    font-family:'Unbounded',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    color:var(--text-muted);
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+  }
+
+  .screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    animation:fadein .35s ease;
+  }
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* Buttons */
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    width:100%;
+    padding:19px 22px;
+    border-radius:20px;
+    border:none;
+    font-family:'Manrope',sans-serif;
+    font-weight:800;
+    font-size:17px;
+    cursor:pointer;
+    transition:transform .12s ease, filter .15s ease, box-shadow .15s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--accent-gold), #f7dd82);
+    color:#221A0A;
+    box-shadow:0 10px 30px rgba(242,201,76,0.28);
+  }
+  .btn-primary:hover{filter:brightness(1.05);}
+  .btn-secondary{
+    background:var(--bg-panel);
+    color:var(--text-primary);
+    border:1px solid var(--line);
+  }
+  .btn-secondary:hover{background:var(--bg-panel-2);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--text-muted);
+    border:1px solid var(--line);
+  }
+  .btn-danger{
+    background:linear-gradient(135deg, var(--accent-magenta), #ff6ba0);
+    color:#2B0416;
+    box-shadow:0 10px 30px rgba(255,61,129,0.25);
+  }
+  .btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+  .btn-row{display:flex;gap:10px;}
+  .btn-row .btn{flex:1;}
+  .stack{display:flex;flex-direction:column;gap:12px;}
+
+  /* Home */
+  .home-wrap{
+    flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:center;
+    gap:26px;
+    padding:20px 0 10px;
+  }
+  .logo-mark{
+    width:88px;height:88px;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .logo-mark svg{width:100%;height:100%;filter:drop-shadow(0 8px 24px rgba(255,61,129,0.35));}
+  .home-title{
+    font-size:34px;
+    font-weight:800;
+    line-height:1.15;
+    letter-spacing:-0.01em;
+  }
+  .home-title .hl{color:var(--accent-gold);}
+  .home-tagline{
+    color:var(--text-muted);
+    font-size:15.5px;
+    line-height:1.55;
+    max-width:320px;
+  }
+  .home-actions{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:8px;}
+
+  /* Generic card / panel */
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:22px;
+  }
+  .section-title{
+    font-family:'Unbounded',sans-serif;
+    font-size:22px;
+    font-weight:700;
+    margin:2px 0 4px;
+  }
+  .section-sub{
+    color:var(--text-muted);
+    font-size:14.5px;
+    line-height:1.5;
+    margin-bottom:20px;
+  }
+  .field-label{
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--text-muted);
+    margin-bottom:10px;
+    display:block;
+  }
+  .stepper{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--bg-panel-2);
+    border-radius:18px;
+    padding:10px 14px;
+  }
+  .stepper-btn{
+    width:46px;height:46px;border-radius:14px;
+    background:var(--bg-panel-3);
+    border:none;color:var(--text-primary);
+    font-size:22px;font-weight:700;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .stepper-btn:active{transform:scale(0.9);}
+  .stepper-btn:disabled{opacity:0.3;cursor:not-allowed;}
+  .stepper-value{
+    font-family:'Space Mono',monospace;
+    font-size:28px;font-weight:700;
+    color:var(--accent-gold);
+    min-width:50px;text-align:center;
+  }
+  .hint-text{font-size:12.5px;color:var(--text-faint);margin-top:8px;line-height:1.5;}
+
+  .option-card{
+    background:var(--bg-panel-2);
+    border:2px solid transparent;
+    border-radius:18px;
+    padding:16px 18px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .option-card.selected{
+    border-color:var(--accent-gold);
+    background:var(--bg-panel-3);
+  }
+  .option-card-title{font-weight:800;font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .option-card-desc{font-size:13px;color:var(--text-muted);line-height:1.45;}
+  .radio-dot{
+    width:20px;height:20px;border-radius:50%;
+    border:2px solid var(--text-faint);
+    flex-shrink:0;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .option-card.selected .radio-dot{border-color:var(--accent-gold);}
+  .option-card.selected .radio-dot::after{
+    content:'';width:10px;height:10px;border-radius:50%;background:var(--accent-gold);
+  }
+
+  .field-row{display:flex;align-items:center;gap:10px;justify-content:space-between;}
+
+  /* Category grid */
+  .cat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .cat-card{
+    background:var(--bg-panel);
+    border:2px solid var(--line);
+    border-radius:20px;
+    padding:18px 12px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .12s ease, background .15s ease;
+  }
+  .cat-card:active{transform:scale(0.96);}
+  .cat-card.selected{
+    border-color:var(--accent-gold);
+    background:var(--bg-panel-2);
+    box-shadow:0 8px 24px rgba(242,201,76,0.15);
+  }
+  .cat-card .emoji{font-size:30px;display:block;margin-bottom:8px;}
+  .cat-card .label{font-size:13.5px;font-weight:700;}
+  .cat-card.random{
+    border-color:rgba(255,61,129,0.4);
+  }
+  .cat-card.random.selected{border-color:var(--accent-magenta);box-shadow:0 8px 24px rgba(255,61,129,0.2);}
+
+  /* Passagem screen (secrecy) */
+  .pass-wrap{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;gap:22px;
+  }
+  .pass-badge{
+    font-family:'Space Mono',monospace;
+    font-size:13px;
+    color:var(--accent-violet);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    background:rgba(140,111,255,0.12);
+    border:1px solid rgba(140,111,255,0.3);
+    padding:6px 16px;border-radius:100px;
+  }
+  .pass-jogador{
+    font-family:'Unbounded',sans-serif;
+    font-size:38px;font-weight:800;
+  }
+  .pass-instruction{
+    color:var(--text-muted);
+    font-size:15px;
+    max-width:280px;
+    line-height:1.6;
+  }
+  .eye-shield{
+    width:120px;height:120px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--bg-panel-3), var(--bg-panel));
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:4px;
+  }
+
+  /* Flip card */
+  .card-scene{
+    perspective:1400px;
+    width:100%;
+    max-width:320px;
+    margin:0 auto;
+  }
+  .card-flip{
+    position:relative;
+    width:100%;
+    aspect-ratio:3/4;
+    transform-style:preserve-3d;
+    transition:transform .7s cubic-bezier(.4,.2,.2,1);
+  }
+  .card-flip.flipped{transform:rotateY(180deg);}
+  .card-face{
+    position:absolute;inset:0;
+    backface-visibility:hidden;
+    border-radius:26px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:26px;
+    text-align:center;
+    box-shadow:var(--shadow-deep);
+  }
+  .card-front{
+    background:linear-gradient(155deg, var(--bg-panel-3), var(--bg-panel));
+    border:1px solid var(--line);
+  }
+  .card-front .tap-icon{font-size:44px;margin-bottom:14px;opacity:0.9;}
+  .card-front .tap-text{color:var(--text-muted);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;}
+  .card-back{
+    transform:rotateY(180deg);
+    background:linear-gradient(155deg, var(--bg-panel-2), var(--bg-panel));
+    border:1px solid var(--line);
+  }
+  .card-back.tipo-impostor{
+    background:linear-gradient(155deg, #3a1030, #240a1f);
+    border-color:rgba(255,61,129,0.4);
+  }
+  .card-back .kicker{
+    font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--text-muted);margin-bottom:14px;
+  }
+  .card-back.tipo-impostor .kicker{color:var(--accent-magenta);}
+  .card-back .palavra{
+    font-family:'Unbounded',sans-serif;
+    font-size:30px;font-weight:800;
+    line-height:1.2;
+    word-break:break-word;
+  }
+  .card-back.tipo-impostor .palavra{color:var(--accent-magenta);font-size:24px;}
+  .card-back .dica{
+    margin-top:14px;font-size:13.5px;color:var(--text-muted);
+    background:rgba(0,0,0,0.2);padding:10px 14px;border-radius:12px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .card-flip{transition:none;}
+  }
+
+  .progress-dots{display:flex;gap:6px;justify-content:center;margin-top:6px;flex-wrap:wrap;max-width:280px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--bg-panel-3);}
+  .dot.done{background:var(--accent-gold);}
+  .dot.current{background:var(--accent-violet);}
+
+  /* Discussao */
+  .discussao-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px;}
+  .discussao-icon{font-size:52px;}
+  .discussao-title{font-family:'Unbounded',sans-serif;font-size:24px;font-weight:700;}
+  .discussao-text{color:var(--text-muted);font-size:15px;line-height:1.6;max-width:300px;}
+
+  /* Resultado */
+  .resultado-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;}
+  .resultado-label{color:var(--text-muted);font-size:13px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;margin-top:18px;}
+  .resultado-valor{font-family:'Unbounded',sans-serif;font-size:26px;font-weight:800;color:var(--accent-magenta);margin-top:6px;line-height:1.3;}
+  .resultado-valor.gold{color:var(--accent-gold);}
+  .resultado-actions{width:100%;margin-top:34px;display:flex;flex-direction:column;gap:12px;}
+
+  /* Regras */
+  .regra-item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line);}
+  .regra-item:last-child{border-bottom:none;}
+  .regra-num{
+    font-family:'Space Mono',monospace;font-weight:700;color:var(--accent-gold);
+    background:rgba(242,201,76,0.12);
+    width:30px;height:30px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;
+  }
+  .regra-text{font-size:14.5px;line-height:1.5;color:var(--text-primary);padding-top:4px;}
+
+  /* Gerenciar palavras */
+  .catlist-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:18px;}
+  .catlist-scroll::-webkit-scrollbar{display:none;}
+  .catchip{
+    flex-shrink:0;padding:9px 16px;border-radius:100px;
+    background:var(--bg-panel);border:1px solid var(--line);
+    font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;
+  }
+  .catchip.active{background:var(--accent-gold);color:#221A0A;border-color:var(--accent-gold);}
+  .word-chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;}
+  .word-chip{
+    display:flex;align-items:center;gap:8px;
+    background:var(--bg-panel-2);border-radius:100px;
+    padding:8px 8px 8px 14px;font-size:13.5px;font-weight:600;
+  }
+  .word-chip button{
+    background:rgba(255,61,129,0.15);color:var(--accent-magenta);
+    border:none;width:22px;height:22px;border-radius:50%;
+    cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;
+  }
+  .empty-note{color:var(--text-faint);font-size:13.5px;font-style:italic;padding:10px 0;}
+  input[type=text], input[type=number]{
+    width:100%;background:var(--bg-panel-2);border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;color:var(--text-primary);
+    font-family:'Manrope',sans-serif;font-size:15px;font-weight:600;
+    outline:none;
+  }
+  input[type=text]:focus, input[type=number]:focus{border-color:var(--accent-gold);}
+  input::placeholder{color:var(--text-faint);font-weight:500;}
+  .inline-form{display:flex;gap:8px;margin-bottom:6px;}
+  .inline-form input{flex:1;}
+  .inline-form button{
+    flex-shrink:0;width:52px;border-radius:14px;background:var(--accent-gold);
+    border:none;color:#221A0A;font-size:22px;font-weight:800;cursor:pointer;
+  }
+  .divider{height:1px;background:var(--line);margin:22px 0;}
+  .small-link{color:var(--accent-violet);font-size:14px;font-weight:700;text-align:center;cursor:pointer;padding:8px;}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--bg-panel-3);border:1px solid var(--line);
+    padding:12px 20px;border-radius:100px;font-size:13.5px;font-weight:700;
+    box-shadow:var(--shadow-deep);z-index:50;
+    animation:toastin .25s ease;
+  }
+  @keyframes toastin{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+  :focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   DADOS
+========================================================= */
+const PALAVRAS_BASE = {
+  comidas: ["Pizza","Hambúrguer","Lasanha","Sushi","Coxinha","Acarajé","Feijoada","Pipoca","Sorvete","Pastel"],
+  lugares: ["Praia","Shopping","Escola","Hospital","Aeroporto","Cinema","Parque","Biblioteca","Estádio","Restaurante"],
+  objetos: ["Celular","Óculos","Cadeira","Mochila","Garrafa","Controle remoto","Chave","Relógio","Notebook","Fone de ouvido"],
+  filmes: ["Titanic","Avatar","Shrek","Barbie","Interestelar","Vingadores","Harry Potter","Frozen","Toy Story","Pantera Negra"],
+  personagens: ["Homem-Aranha","Batman","Naruto","Mario","Bob Esponja","Barbie","Hulk","Elsa","Darth Vader","Goku"],
+  animais: ["Cachorro","Gato","Leão","Tubarão","Elefante","Cavalo","Macaco","Golfinho","Cobra","Coruja"],
+  profissoes: ["Médico","Professor","Engenheiro","Advogado","Motorista","Cantor","Ator","Programador","Dentista","Cozinheiro"],
+  marcas: ["Nike","Coca-Cola","Adidas","Apple","Samsung","McDonald's","Netflix","Google","Ferrari","Lego"],
+  celebridades: ["Neymar","Anitta","Cristiano Ronaldo","Taylor Swift","Beyoncé","Ronaldinho Gaúcho","Ivete Sangalo","Messi","Xuxa","Silvio Santos"],
+  desenhos: ["Bob Esponja","Peppa Pig","Turma da Mônica","Pica-Pau","Tom e Jerry","Scooby-Doo","Os Simpsons","Rick and Morty","Detetives do Prédio Azul","Pernalonga"],
+  jogos: ["Minecraft","Free Fire","Roblox","The Sims","Fortnite","Among Us","GTA","FIFA","Super Mario","Valorant"],
+  series_novelas: ["Avenida Brasil","Pantanal","Amor de Mãe","Stranger Things","Round 6","The Last of Us","Todo Mundo Odeia o Chris","Chaves","Friends","Elite"]
+};
+
+const CATEGORIAS_INFO = [
+  {key:"comidas", label:"Comidas", emoji:"🍕", dica:"É algo relacionado a comida."},
+  {key:"lugares", label:"Lugares", emoji:"📍", dica:"É um lugar que as pessoas costumam visitar."},
+  {key:"objetos", label:"Objetos", emoji:"🎒", dica:"É algo que se pode segurar ou usar no dia a dia."},
+  {key:"filmes", label:"Filmes", emoji:"🎬", dica:"É algo relacionado ao mundo do cinema."},
+  {key:"personagens", label:"Personagens", emoji:"🦸", dica:"É um personagem conhecido."},
+  {key:"animais", label:"Animais", emoji:"🐾", dica:"É um ser vivo do reino animal."},
+  {key:"profissoes", label:"Profissões", emoji:"💼", dica:"É uma profissão ou ocupação."},
+  {key:"marcas", label:"Marcas", emoji:"🏷️", dica:"É uma marca conhecida."},
+  {key:"celebridades", label:"Celebridades", emoji:"🌟", dica:"É uma pessoa famosa."},
+  {key:"desenhos", label:"Desenhos", emoji:"🎨", dica:"É algo do universo de desenhos e animações."},
+  {key:"jogos", label:"Jogos", emoji:"🎮", dica:"É algo relacionado a jogos."},
+  {key:"series_novelas", label:"Séries/Novelas", emoji:"📺", dica:"É algo do mundo das séries ou novelas."}
+];
+
+const MODOS_INFO = {
+  simples: {titulo:"Modo simples", desc:"O impostor recebe apenas: \"Você é o impostor.\""},
+  dica: {titulo:"Modo com dica", desc:"O impostor recebe uma dica vaga sobre a categoria."},
+  parecida: {titulo:"Palavra parecida", desc:"O impostor recebe uma palavra diferente, mas parecida."}
+};
+
+/* =========================================================
+   ESTADO
+========================================================= */
+let state = {
+  screen: "home",
+  numJogadores: 4,
+  numImpostores: 1,
+  modoImpostor: "simples",
+  categoria: "comidas",
+  jogadores: [],
+  jogadorAtualIndex: 0,
+  cardFlipped: false,
+  palavraVerdadeira: "",
+  gerenciarCatAtiva: "comidas",
+  toastMsg: null
+};
+
+let custom = { extraWords: {}, customCategories: {} };
+let historyStack = [];
+
+/* =========================================================
+   STORAGE (persistência de palavras personalizadas)
+========================================================= */
+async function loadCustom(){
+  try{
+    const res = await window.storage.get('impostor-dados-personalizados', false);
+    if(res && res.value){
+      custom = JSON.parse(res.value);
+      custom.extraWords = custom.extraWords || {};
+      custom.customCategories = custom.customCategories || {};
+    }
+  }catch(e){
+    custom = { extraWords: {}, customCategories: {} };
+  }
+  render();
+}
+async function saveCustom(){
+  try{
+    await window.storage.set('impostor-dados-personalizados', JSON.stringify(custom), false);
+  }catch(e){ /* silencioso: app continua funcionando em memória */ }
+}
+
+/* =========================================================
+   HELPERS DE PALAVRAS / CATEGORIAS
+========================================================= */
+function todasCategorias(){
+  const customList = Object.keys(custom.customCategories).map(key => ({
+    key, label: custom.customCategories[key].label, emoji: "✨",
+    dica: `É algo relacionado a "${custom.customCategories[key].label}".`, isCustom:true
+  }));
+  return [...CATEGORIAS_INFO, ...customList];
+}
+function palavrasDaCategoria(catKey){
+  if(custom.customCategories[catKey]) return custom.customCategories[catKey].palavras.slice();
+  const base = PALAVRAS_BASE[catKey] ? PALAVRAS_BASE[catKey].slice() : [];
+  const extra = custom.extraWords[catKey] || [];
+  return base.concat(extra);
+}
+function dicaDaCategoria(catKey){
+  const info = todasCategorias().find(c => c.key === catKey);
+  return info ? info.dica : "É algo desta categoria.";
+}
+function todasPalavrasGlobais(){
+  let all = [];
+  todasCategorias().forEach(c => { all = all.concat(palavrasDaCategoria(c.key).map(p => ({palavra:p, cat:c.key}))); });
+  return all;
+}
+function sortearAleatorio(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* =========================================================
+   REGRAS DE IMPOSTORES
+========================================================= */
+function maxImpostores(n){
+  if(n <= 6) return 1;
+  if(n <= 10) return 2;
+  return 3;
+}
+
+/* =========================================================
+   SORTEIO DA RODADA
+========================================================= */
+function iniciarRodada(){
+  let catReal = state.categoria;
+  let pool, palavraVerdadeira;
+
+  if(state.categoria === "aleatorio"){
+    const global = todasPalavrasGlobais();
+    const escolha = sortearAleatorio(global);
+    palavraVerdadeira = escolha.palavra;
+    catReal = escolha.cat;
+    pool = palavrasDaCategoria(catReal);
+  } else {
+    pool = palavrasDaCategoria(state.categoria);
+    palavraVerdadeira = sortearAleatorio(pool);
+  }
+
+  // sorteio dos impostores
+  const indices = Array.from({length: state.numJogadores}, (_, i) => i);
+  for(let i = indices.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  const impostorSet = new Set(indices.slice(0, state.numImpostores));
+
+  // palavra parecida (se aplicável) - uma única palavra "parecida" para todos os impostores
+  let palavraParecida = null;
+  if(state.modoImpostor === "parecida"){
+    const candidatosLocais = pool.filter(p => p !== palavraVerdadeira);
+    if(candidatosLocais.length > 0){
+      palavraParecida = sortearAleatorio(candidatosLocais);
+    } else {
+      const globalFiltrado = todasPalavrasGlobais().filter(x => x.palavra !== palavraVerdadeira);
+      palavraParecida = globalFiltrado.length ? sortearAleatorio(globalFiltrado).palavra : palavraVerdadeira;
+    }
+  }
+
+  const jogadores = [];
+  for(let i = 0; i < state.numJogadores; i++){
+    const isImpostor = impostorSet.has(i);
+    jogadores.push({
+      numero: i+1,
+      tipo: isImpostor ? "impostor" : "normal",
+      palavra: isImpostor ? (state.modoImpostor === "parecida" ? palavraParecida : null) : palavraVerdadeira
+    });
+  }
+
+  state.jogadores = jogadores;
+  state.jogadorAtualIndex = 0;
+  state.cardFlipped = false;
+  state.palavraVerdadeira = palavraVerdadeira;
+  state.categoriaSorteada = catReal;
+  goTo("passagem");
+}
+
+/* =========================================================
+   NAVEGAÇÃO
+========================================================= */
+function goTo(screen){
+  historyStack.push(state.screen);
+  state.screen = screen;
+  window.scrollTo(0,0);
+  render();
+}
+function goBack(){
+  const prev = historyStack.pop();
+  state.screen = prev || "home";
+  render();
+}
+function showToast(msg){
+  state.toastMsg = msg;
+  render();
+  setTimeout(() => { state.toastMsg = null; render(); }, 1800);
+}
+
+/* =========================================================
+   AÇÕES DE TELA
+========================================================= */
+function setNumJogadores(n){
+  n = Math.max(3, Math.min(20, n));
+  state.numJogadores = n;
+  const maxImp = maxImpostores(n);
+  if(state.numImpostores > maxImp) state.numImpostores = maxImp;
+  render();
+}
+function setNumImpostores(n){
+  const maxImp = maxImpostores(state.numJogadores);
+  n = Math.max(1, Math.min(maxImp, n));
+  state.numImpostores = n;
+  render();
+}
+function setModo(m){ state.modoImpostor = m; render(); }
+function selecionarCategoria(key){ state.categoria = key; render(); }
+
+function flipCard(){
+  state.cardFlipped = true;
+  render();
+}
+function proximoJogador(){
+  state.cardFlipped = false;
+  if(state.jogadorAtualIndex < state.jogadores.length - 1){
+    state.jogadorAtualIndex += 1;
+    render();
+  } else {
+    goTo("discussao");
+  }
+}
+function reiniciarRodada(){
+  iniciarRodada();
+}
+function jogarNovamenteMesmaConfig(){
+  iniciarRodada();
+}
+
+/* Gerenciar palavras */
+function setGerenciarCat(key){ state.gerenciarCatAtiva = key; render(); }
+function adicionarPalavra(inputEl){
+  const val = inputEl.value.trim();
+  if(!val){ showToast("Digite uma palavra antes de adicionar."); return; }
+  const cat = state.gerenciarCatAtiva;
+  if(custom.customCategories[cat]){
+    if(custom.customCategories[cat].palavras.some(p => p.toLowerCase() === val.toLowerCase())){
+      showToast("Essa palavra já existe."); return;
+    }
+    custom.customCategories[cat].palavras.push(val);
+  } else {
+    custom.extraWords[cat] = custom.extraWords[cat] || [];
+    const todas = palavrasDaCategoria(cat);
+    if(todas.some(p => p.toLowerCase() === val.toLowerCase())){
+      showToast("Essa palavra já existe."); return;
+    }
+    custom.extraWords[cat].push(val);
+  }
+  saveCustom();
+  inputEl.value = "";
+  render();
+}
+function removerPalavra(cat, palavra){
+  if(custom.customCategories[cat]){
+    custom.customCategories[cat].palavras = custom.customCategories[cat].palavras.filter(p => p !== palavra);
+  } else {
+    custom.extraWords[cat] = (custom.extraWords[cat] || []).filter(p => p !== palavra);
+  }
+  saveCustom();
+  render();
+}
+function criarNovaCategoria(inputEl){
+  const nome = inputEl.value.trim();
+  if(!nome){ showToast("Digite um nome para a categoria."); return; }
+  const key = "custom_" + nome.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"") + "_" + Date.now();
+  custom.customCategories[key] = { label: nome, palavras: [] };
+  saveCustom();
+  inputEl.value = "";
+  state.gerenciarCatAtiva = key;
+  render();
+}
+
+/* =========================================================
+   RENDER: COMPONENTES DE TELA
+========================================================= */
+function iconMask(){
+  return `<div class="logo-mark"><svg viewBox="0 0 100 100" fill="none">
+    <circle cx="50" cy="50" r="46" fill="#2A2150" stroke="#8C6FFF" stroke-opacity="0.4" stroke-width="2"/>
+    <path d="M25 45c0-4 4-7 9-7s9 3 9 7-4 12-9 12-9-8-9-12z" fill="#F2C94C"/>
+    <path d="M75 45c0-4-4-7-9-7s-9 3-9 7 4 12 9 12 9-8 9-12z" fill="#F2C94C"/>
+    <path d="M35 68c5 5 25 5 30 0" stroke="#FF3D81" stroke-width="4" stroke-linecap="round"/>
+  </svg></div>`;
+}
+
+function screenHome(){
+  return `
+    <div class="home-wrap">
+      ${iconMask()}
+      <div>
+        <div class="home-title">Jogo do<br><span class="hl">Impostor</span></div>
+      </div>
+      <div class="home-tagline">Passe o celular, veja sua palavra em segredo e descubra quem está fingindo.</div>
+      <div class="home-actions">
+        <button class="btn btn-primary" onclick="goTo('config')">🎲 Começar jogo</button>
+        <button class="btn btn-secondary" onclick="goTo('regras')">📖 Ver regras</button>
+        <button class="btn btn-ghost" onclick="goTo('gerenciar')">✏️ Gerenciar palavras</button>
+      </div>
+    </div>
+  `;
+}
+
+function screenConfig(){
+  const maxImp = maxImpostores(state.numJogadores);
+  return `
+    <div class="screen">
+      <div class="topbar"><button class="backbtn" onclick="goBack()">←</button><div class="topbar-title">Configuração</div></div>
+      <div class="section-title">Monte a partida</div>
+      <div class="section-sub">Defina quantos vão jogar e como o impostor vai se comportar.</div>
+
+      <div class="panel stack" style="margin-bottom:16px;">
+        <div>
+          <span class="field-label">Quantidade de jogadores</span>
+          <div class="stepper">
+            <button class="stepper-btn" ${state.numJogadores<=3?'disabled':''} onclick="setNumJogadores(state.numJogadores-1)">–</button>
+            <div class="stepper-value mono">${state.numJogadores}</div>
+            <button class="stepper-btn" ${state.numJogadores>=20?'disabled':''} onclick="setNumJogadores(state.numJogadores+1)">+</button>
+          </div>
+        </div>
+        <div>
+          <span class="field-label">Quantidade de impostores</span>
+          <div class="stepper">
+            <button class="stepper-btn" ${state.numImpostores<=1?'disabled':''} onclick="setNumImpostores(state.numImpostores-1)">–</button>
+            <div class="stepper-value mono">${state.numImpostores}</div>
+            <button class="stepper-btn" ${state.numImpostores>=maxImp?'disabled':''} onclick="setNumImpostores(state.numImpostores+1)">+</button>
+          </div>
+          <div class="hint-text">Máximo de ${maxImp} impostor${maxImp>1?'es':''} para ${state.numJogadores} jogadores.</div>
+        </div>
+      </div>
+
+      <span class="field-label">Modo do impostor</span>
+      <div class="stack" style="margin-bottom:22px;">
+        ${Object.keys(MODOS_INFO).map(m => `
+          <div class="option-card ${state.modoImpostor===m?'selected':''}" onclick="setModo('${m}')">
+            <div class="option-card-title"><span class="radio-dot"></span> ${MODOS_INFO[m].titulo}</div>
+            <div class="option-card-desc">${MODOS_INFO[m].desc}</div>
+          </div>
+        `).join("")}
+      </div>
+
+      <button class="btn btn-primary" onclick="goTo('categoria')">Escolher categoria →</button>
+    </div>
+  `;
+}
+
+function screenCategoria(){
+  const cats = todasCategorias();
+  const cardsHtml = cats.map(c => `
+    <div class="cat-card ${state.categoria===c.key?'selected':''}" onclick="selecionarCategoria('${c.key}')">
+      <span class="emoji">${c.emoji}</span>
+      <span class="label">${c.label}</span>
+    </div>
+  `).join("");
+  return `
+    <div class="screen">
+      <div class="topbar"><button class="backbtn" onclick="goBack()">←</button><div class="topbar-title">Categoria</div></div>
+      <div class="section-title">Escolha a categoria</div>
+      <div class="section-sub">A palavra secreta vai sair dela.</div>
+      <div class="cat-grid">
+        ${cardsHtml}
+        <div class="cat-card random ${state.categoria==='aleatorio'?'selected':''}" onclick="selecionarCategoria('aleatorio')" style="grid-column: span 2;">
+          <span class="emoji">🎲</span>
+          <span class="label">Aleatório (mistura tudo)</span>
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" style="margin-top:22px;" onclick="tentarIniciarRodada()">Sortear e iniciar rodada 🔮</button>
+    </div>
+  `;
+}
+
+function tentarIniciarRodada(){
+  if(state.categoria !== "aleatorio"){
+    const pool = palavrasDaCategoria(state.categoria);
+    if(pool.length === 0){
+      showToast("Essa categoria não tem palavras. Escolha outra ou adicione palavras.");
+      return;
+    }
+  }
+  iniciarRodada();
+}
+
+function screenPassagem(){
+  const jogador = state.jogadores[state.jogadorAtualIndex];
+  const total = state.jogadores.length;
+  const dots = state.jogadores.map((j,i) => {
+    let cls = "dot";
+    if(i < state.jogadorAtualIndex) cls += " done";
+    else if(i === state.jogadorAtualIndex) cls += " current";
+    return `<div class="${cls}"></div>`;
+  }).join("");
+
+  let backFaceContent = "";
+  if(jogador.tipo === "normal"){
+    backFaceContent = `
+      <div class="kicker">Sua palavra é</div>
+      <div class="palavra">${jogador.palavra.toUpperCase()}</div>
+    `;
+  } else {
+    if(state.modoImpostor === "parecida"){
+      backFaceContent = `
+        <div class="kicker">Sua palavra é</div>
+        <div class="palavra">${jogador.palavra.toUpperCase()}</div>
+      `;
+    } else if(state.modoImpostor === "dica"){
+      backFaceContent = `
+        <div class="kicker">Você é o impostor</div>
+        <div class="palavra">🎭</div>
+        <div class="dica">Dica: ${dicaDaCategoria(state.categoriaSorteada)}</div>
+      `;
+    } else {
+      backFaceContent = `
+        <div class="kicker">Atenção</div>
+        <div class="palavra">Você é<br>o impostor</div>
+      `;
+    }
+  }
+
+  return `
+    <div class="screen">
+      <div class="topbar"><div style="width:40px"></div><div class="topbar-title">Rodada em andamento</div></div>
+      <div class="pass-wrap">
+        <div class="pass-badge">Jogador ${jogador.numero} de ${total}</div>
+
+        ${!state.cardFlipped ? `
+          <div class="eye-shield">👁️</div>
+          <div class="pass-jogador">Jogador ${jogador.numero}</div>
+          <div class="pass-instruction">Quando estiver sozinho olhando para a tela, toque no cartão abaixo para ver sua palavra.</div>
+        ` : ``}
+
+        <div class="card-scene">
+          <div class="card-flip ${state.cardFlipped?'flipped':''}">
+            <div class="card-face card-front" onclick="${state.cardFlipped?'':'flipCard()'}">
+              <div class="tap-icon">🎭</div>
+              <div class="tap-text">Toque para revelar</div>
+            </div>
+            <div class="card-face card-back ${jogador.tipo==='impostor' && state.modoImpostor!=='parecida' ?'tipo-impostor':''}">
+              ${backFaceContent}
+            </div>
+          </div>
+        </div>
+
+        ${state.cardFlipped ? `
+          <button class="btn btn-primary" onclick="proximoJogador()">Ocultar e passar</button>
+        ` : ``}
+
+        <div class="progress-dots">${dots}</div>
+      </div>
+    </div>
+  `;
+}
+
+function screenDiscussao(){
+  return `
+    <div class="screen">
+      <div class="topbar"><div style="width:40px"></div><div class="topbar-title">Discussão</div></div>
+      <div class="discussao-wrap">
+        <div class="discussao-icon">🕵️</div>
+        <div class="discussao-title">Todos já viram suas palavras</div>
+        <div class="discussao-text">Agora conversem, façam perguntas e tentem descobrir quem é o impostor.</div>
+      </div>
+      <div class="stack">
+        <button class="btn btn-danger" onclick="goTo('resultado')">Revelar resultado</button>
+        <button class="btn btn-ghost" onclick="reiniciarRodada()">Reiniciar rodada</button>
+      </div>
+    </div>
+  `;
+}
+
+function screenResultado(){
+  const impostores = state.jogadores.filter(j => j.tipo === "impostor");
+  let nomesImpostores;
+  if(impostores.length === 1){
+    nomesImpostores = `Jogador ${impostores[0].numero}`;
+  } else {
+    const nums = impostores.map(j => `Jogador ${j.numero}`);
+    nomesImpostores = nums.slice(0,-1).join(", ") + " e " + nums[nums.length-1];
+  }
+  return `
+    <div class="screen">
+      <div class="topbar"><div style="width:40px"></div><div class="topbar-title">Resultado</div></div>
+      <div class="resultado-wrap">
+        <div style="font-size:44px;">🎭</div>
+        <div class="resultado-label">${impostores.length>1?'Os impostores eram':'O impostor era'}</div>
+        <div class="resultado-valor">${nomesImpostores}</div>
+        <div class="resultado-label">A palavra verdadeira era</div>
+        <div class="resultado-valor gold">${state.palavraVerdadeira.toUpperCase()}</div>
+        <div class="resultado-actions">
+          <button class="btn btn-primary" onclick="jogarNovamenteMesmaConfig()">🔁 Jogar de novo (mesma config)</button>
+          <button class="btn btn-secondary" onclick="goTo('config')">⚙️ Nova configuração</button>
+          <button class="btn btn-ghost" onclick="voltarInicio()">🏠 Voltar ao início</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function voltarInicio(){
+  historyStack = [];
+  state.screen = "home";
+  render();
+}
+
+function screenRegras(){
+  const regras = [
+    "Escolha a quantidade de jogadores.",
+    "Escolha uma categoria.",
+    "O app vai sortear uma palavra secreta.",
+    "A maioria dos jogadores recebe a mesma palavra.",
+    "Um ou mais jogadores serão impostores.",
+    "Cada pessoa deve ver sua palavra em segredo.",
+    "Depois, todos conversam.",
+    "O objetivo dos jogadores normais é descobrir o impostor.",
+    "O objetivo do impostor é fingir que sabe a palavra.",
+    "No final, revelem quem era o impostor."
+  ];
+  return `
+    <div class="screen">
+      <div class="topbar"><button class="backbtn" onclick="goBack()">←</button><div class="topbar-title">Regras</div></div>
+      <div class="section-title">Como jogar</div>
+      <div class="panel">
+        ${regras.map((r,i) => `
+          <div class="regra-item">
+            <div class="regra-num mono">${i+1}</div>
+            <div class="regra-text">${r}</div>
+          </div>
+        `).join("")}
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" style="margin-top:20px;" onclick="goTo('config')">Entendi, jogar agora</button>
+    </div>
+  `;
+}
+
+function screenGerenciar(){
+  const cats = todasCategorias();
+  const catAtiva = state.gerenciarCatAtiva;
+  const palavras = palavrasDaCategoria(catAtiva);
+  const chips = cats.map(c => `
+    <div class="catchip ${catAtiva===c.key?'active':''}" onclick="setGerenciarCat('${c.key}')">${c.emoji} ${c.label}</div>
+  `).join("");
+
+  return `
+    <div class="screen">
+      <div class="topbar"><button class="backbtn" onclick="goBack()">←</button><div class="topbar-title">Gerenciar palavras</div></div>
+      <div class="section-title">Suas categorias</div>
+      <div class="section-sub">Adicione, remova ou crie categorias com palavras personalizadas.</div>
+
+      <div class="catlist-scroll">${chips}</div>
+
+      <div class="inline-form">
+        <input type="text" id="inputNovaPalavra" placeholder="Digite uma nova palavra" onkeydown="if(event.key==='Enter')adicionarPalavra(document.getElementById('inputNovaPalavra'))">
+        <button onclick="adicionarPalavra(document.getElementById('inputNovaPalavra'))">+</button>
+      </div>
+
+      <div class="word-chips">
+        ${palavras.length ? palavras.map(p => `
+          <div class="word-chip">${p} <button onclick="removerPalavra('${catAtiva}','${p.replace(/'/g,"\\'")}')">✕</button></div>
+        `).join("") : `<div class="empty-note">Nenhuma palavra nessa categoria ainda.</div>`}
+      </div>
+
+      <div class="divider"></div>
+
+      <span class="field-label">Criar nova categoria</span>
+      <div class="inline-form">
+        <input type="text" id="inputNovaCategoria" placeholder="Nome da categoria" onkeydown="if(event.key==='Enter')criarNovaCategoria(document.getElementById('inputNovaCategoria'))">
+        <button onclick="criarNovaCategoria(document.getElementById('inputNovaCategoria'))">+</button>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   RENDER PRINCIPAL
+========================================================= */
+function render(){
+  const app = document.getElementById('app');
+  let html = "";
+  switch(state.screen){
+    case "home": html = screenHome(); break;
+    case "config": html = screenConfig(); break;
+    case "categoria": html = screenCategoria(); break;
+    case "passagem": html = screenPassagem(); break;
+    case "discussao": html = screenDiscussao(); break;
+    case "resultado": html = screenResultado(); break;
+    case "regras": html = screenRegras(); break;
+    case "gerenciar": html = screenGerenciar(); break;
+    default: html = screenHome();
+  }
+  if(state.toastMsg){
+    html += `<div class="toast">${state.toastMsg}</div>`;
+  }
+  app.innerHTML = html;
+}
+
+loadCustom();
+</script>
+</body>
+</html>
